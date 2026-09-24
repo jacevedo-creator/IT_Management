@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Access Registry — COL, PER & KS</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #F7F8FA;
+    --surface: #ffffff;
+    --surface-2: #F1F3F6;
+    --border: #E2E5EA;
+    --border-strong: #C8CDD6;
+    --text: #1A1D23;
+    --text-2: #545C6B;
+    --text-3: #8A93A2;
+    --accent: #1A56DB;
+    --accent-soft: #EBF1FD;
+    --col: #0E8A5F;
+    --col-soft: #E6F5EE;
+    --per: #1A56DB;
+    --per-soft: #EBF1FD;
+    --ks: #D97706;
+    --ks-soft: #FEF3C7;
+    --danger: #C53030;
+    --danger-soft: #FEF2F2;
+    --warning: #92400E;
+    --warning-soft: #FFFBEB;
+    --success: #065F46;
+    --success-soft: #ECFDF5;
+    --radius: 8px;
+    --shadow: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.04);
+    --shadow-md: 0 4px 12px rgba(0,0,0,.1);
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.5;
+    min-height: 100vh;
+  }
+
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 56px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .logo { display: flex; align-items: center; gap: 10px; }
+  .logo-mark {
+    width: 28px; height: 28px; border-radius: 6px;
+    background: var(--accent); display: flex; align-items: center; justify-content: center;
+  }
+  .logo-mark svg { width: 16px; height: 16px; fill: #fff; }
+  .logo-text { font-size: 15px; font-weight: 600; letter-spacing: -.3px; }
+  .logo-sub { font-size: 12px; color: var(--text-3); margin-left: 4px; }
+  .header-actions { display: flex; gap: 8px; }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 7px 14px; border-radius: var(--radius); border: 1px solid var(--border);
+    background: var(--surface); color: var(--text); font-size: 13px; font-weight: 500;
+    cursor: pointer; transition: all .15s; white-space: nowrap;
+  }
+  .btn:hover { background: var(--surface-2); border-color: var(--border-strong); }
+  .btn-primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn-primary:hover { background: #1646b8; border-color: #1646b8; }
+  .btn-danger { background: var(--danger-soft); color: var(--danger); border-color: #FCA5A5; }
+  .btn-danger:hover { background: #FEE2E2; }
+  .btn svg { width: 14px; height: 14px; flex-shrink: 0; }
+
+  main { max-width: 1280px; margin: 0 auto; padding: 28px 32px; }
+
+  .stats { display: flex; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; }
+  .stat-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 14px 20px; flex: 1; min-width: 130px;
+  }
+  .stat-value { font-size: 22px; font-weight: 700; line-height: 1; }
+  .stat-label { font-size: 11px; color: var(--text-3); margin-top: 4px; text-transform: uppercase; letter-spacing: .5px; }
+
+  .toolbar {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 12px 16px; margin-bottom: 16px;
+    display: flex; gap: 10px; flex-wrap: wrap; align-items: center;
+  }
+  .search-wrap { position: relative; flex: 1; min-width: 200px; }
+  .search-wrap svg { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); width: 14px; height: 14px; color: var(--text-3); }
+  .search-input {
+    width: 100%; padding: 7px 10px 7px 32px;
+    border: 1px solid var(--border); border-radius: var(--radius);
+    font-size: 13px; color: var(--text); background: var(--bg);
+    outline: none; transition: border-color .15s;
+  }
+  .search-input:focus { border-color: var(--accent); }
+  .filter-group { display: flex; gap: 6px; flex-wrap: wrap; }
+  .filter-chip {
+    padding: 5px 12px; border-radius: 20px; border: 1px solid var(--border);
+    background: var(--surface); color: var(--text-2); font-size: 12px; font-weight: 500;
+    cursor: pointer; transition: all .12s;
+  }
+  .filter-chip.on { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .site-chip { padding: 5px 12px; border-radius: 20px; border: 1px solid var(--border); background: var(--surface); color: var(--text-2); font-size: 12px; font-weight: 500; cursor: pointer; transition: all .12s; }
+  .site-chip.col-on { background: var(--col-soft); color: var(--col); border-color: var(--col); }
+  .site-chip.per-on { background: var(--per-soft); color: var(--per); border-color: var(--per); }
+  .site-chip.ks-on  { background: var(--ks-soft); color: var(--ks); border-color: var(--ks); }
+
+  .table-wrap {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); overflow: hidden;
+  }
+  table { width: 100%; border-collapse: collapse; }
+  thead { background: var(--surface-2); }
+  th {
+    padding: 10px 14px; text-align: left; font-size: 11px; font-weight: 600;
+    color: var(--text-3); text-transform: uppercase; letter-spacing: .5px;
+    border-bottom: 1px solid var(--border); white-space: nowrap; cursor: pointer; user-select: none;
+  }
+  th:hover { color: var(--text); }
+  th.sorted { color: var(--accent); }
+  th .sort-icon { margin-left: 4px; opacity: .4; font-size: 10px; }
+  th.sorted .sort-icon { opacity: 1; }
+  td {
+    padding: 11px 14px; border-bottom: 1px solid var(--border);
+    vertical-align: middle; font-size: 13px;
+  }
+  tr:last-child td { border-bottom: none; }
+  tr.data-row:hover td { background: #FAFBFC; }
+
+  .badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; white-space: nowrap;
+  }
+  .b-plat   { background: #EBF1FD; color: #1A3A8F; }
+  .b-infra  { background: #ECFDF5; color: #065F46; }
+  .b-sec    { background: #FFFBEB; color: #78350F; }
+  .b-corp   { background: #F5F3FF; color: #4C1D95; }
+  .b-tel    { background: #FEF2F2; color: #991B1B; }
+
+  .level {
+    display: inline-block; padding: 2px 8px; border-radius: 4px;
+    font-size: 11px; font-weight: 500; border: 1px solid;
+  }
+  .lv-admin   { background: #FEF2F2; color: #991B1B; border-color: #FCA5A5; }
+  .lv-readex  { background: #FFFBEB; color: #78350F; border-color: #FCD34D; }
+  .lv-read    { background: #ECFDF5; color: #065F46; border-color: #6EE7B7; }
+  .lv-owner   { background: #F5F3FF; color: #4C1D95; border-color: #C4B5FD; }
+  .lv-help    { background: #EBF1FD; color: #1A3A8F; border-color: #93C5FD; }
+
+  .site-check { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%; font-size: 12px; font-weight: 700; cursor: pointer; }
+  .site-yes-col { background: var(--col-soft); color: var(--col); }
+  .site-yes-per { background: var(--per-soft); color: var(--per); }
+  .site-yes-ks  { background: var(--ks-soft); color: var(--ks); }
+  .site-no      { color: var(--text-3); font-size: 16px; }
+
+  .prio { display: inline-block; width: 8px; height: 8px; border-radius: 50%; }
+  .prio-high   { background: #EF4444; }
+  .prio-med    { background: #F59E0B; }
+  .prio-low    { background: #10B981; }
+
+  .editable { cursor: pointer; padding: 2px 4px; border-radius: 4px; transition: background .1s; }
+  .editable:hover { background: var(--accent-soft); }
+  .edit-input {
+    border: 1.5px solid var(--accent); border-radius: 4px; padding: 2px 6px;
+    font-size: 13px; color: var(--text); background: var(--surface); width: 100%;
+    outline: none;
+  }
+  .row-actions { display: flex; gap: 6px; opacity: 0; transition: opacity .15s; }
+  tr.data-row:hover .row-actions { opacity: 1; }
+  .icon-btn {
+    width: 26px; height: 26px; border-radius: 5px; border: 1px solid var(--border);
+    background: var(--surface); color: var(--text-2); cursor: pointer;
+    display: flex; align-items: center; justify-content: center; transition: all .12s;
+  }
+  .icon-btn:hover { background: var(--surface-2); }
+  .icon-btn.del:hover { background: var(--danger-soft); color: var(--danger); border-color: #FCA5A5; }
+  .icon-btn svg { width: 13px; height: 13px; }
+
+  .modal-bg {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,.35);
+    z-index: 200; align-items: center; justify-content: center;
+  }
+  .modal-bg.open { display: flex; }
+  .modal {
+    background: var(--surface); border-radius: 12px; box-shadow: var(--shadow-md);
+    width: 520px; max-width: 95vw; max-height: 90vh; overflow-y: auto;
+  }
+  .modal-header {
+    padding: 20px 24px 16px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .modal-header h2 { font-size: 16px; font-weight: 600; }
+  .modal-body { padding: 20px 24px; display: flex; flex-direction: column; gap: 14px; }
+  .modal-footer { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; gap: 8px; justify-content: flex-end; }
+  .field label { display: block; font-size: 12px; font-weight: 500; color: var(--text-2); margin-bottom: 5px; }
+  .field input, .field select, .field textarea {
+    width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: var(--radius);
+    font-size: 13px; color: var(--text); background: var(--bg); outline: none; transition: border-color .15s;
+    font-family: inherit;
+  }
+  .field input:focus, .field select:focus, .field textarea:focus { border-color: var(--accent); }
+  .field textarea { resize: vertical; min-height: 60px; }
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .toggle-row { display: flex; align-items: center; justify-content: space-between; }
+  .toggle-label { font-size: 13px; color: var(--text-2); }
+  .toggle { width: 38px; height: 20px; border-radius: 10px; background: var(--border); border: none; cursor: pointer; position: relative; transition: background .2s; }
+  .toggle.on { background: var(--accent); }
+  .toggle::after { content:''; position:absolute; width:14px;height:14px;border-radius:50%;background:#fff;top:3px;left:3px;transition:transform .2s; box-shadow: 0 1px 3px rgba(0,0,0,.2); }
+  .toggle.on::after { transform: translateX(18px); }
+
+  .empty { padding: 48px; text-align: center; color: var(--text-3); }
+  .empty svg { width: 32px; height: 32px; margin-bottom: 10px; }
+
+  .pill-group { display: flex; flex-wrap: wrap; gap: 4px; }
+  .pill {
+    padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 500;
+    border: 1px solid var(--border); background: var(--surface-2); color: var(--text-2);
+    cursor: pointer; user-select: none; transition: all .12s; white-space: nowrap;
+  }
+  .pill.on-seb  { background: #EDE9FE; color: #4C1D95; border-color: #C4B5FD; }
+  .pill.on-dean { background: #ECFDF5; color: #065F46; border-color: #6EE7B7; }
+  .pill.on-luc  { background: #FFF7ED; color: #92400E; border-color: #FCD34D; }
+  .pill.on-reg  { background: #FEF2F2; color: #991B1B; border-color: #FCA5A5; }
+
+  .check-group { display: flex; flex-wrap: wrap; gap: 8px; }
+  .check-pill {
+    display: flex; align-items: center; gap: 5px; padding: 5px 10px;
+    border-radius: 20px; border: 1px solid var(--border); background: var(--bg);
+    font-size: 12px; font-weight: 500; color: var(--text-2); cursor: pointer; transition: all .12s;
+  }
+  .check-pill input { display:none; }
+  .check-pill.sel { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
+  .check-pill .dot { width:7px;height:7px;border-radius:50%; }
+
+  .toast {
+    position: fixed; bottom: 20px; right: 20px; z-index: 300;
+    background: #1A1D23; color: #fff; padding: 10px 16px; border-radius: 8px;
+    font-size: 13px; box-shadow: var(--shadow-md);
+    transform: translateY(60px); opacity: 0; transition: all .25s;
+  }
+  .toast.show { transform: translateY(0); opacity: 1; }
+
+  .export-bar {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 10px 16px; margin-top: 14px;
+    display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+  }
+  .export-label { font-size: 12px; color: var(--text-3); margin-right: 4px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-mark">
+      <svg viewBox="0 0 16 16"><path d="M8 1.5A6.5 6.5 0 1 0 14.5 8 6.507 6.507 0 0 0 8 1.5zm0 11.5A5 5 0 1 1 13 8 5.006 5.006 0 0 1 8 13zm.75-7.25v3.5a.75.75 0 0 1-1.5 0v-3.5a.75.75 0 0 1 1.5 0zm-.75-2a.875.875 0 1 1 0 1.75.875.875 0 0 1 0-1.75z"/></svg>
+    </div>
+    <span class="logo-text">Access Registry</span>
+    <span class="logo-sub">COL · PER · KS</span>
+  </div>
+  <div class="header-actions">
+    <button class="btn btn-primary" onclick="openModal()">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 3v10M3 8h10"/></svg>
+      Add access
+    </button>
+  </div>
+</header>
+
+<main>
+  <div class="stats" id="stats-bar"></div>
+
+  <div class="toolbar">
+    <div class="search-wrap">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="6.5" cy="6.5" r="4"/><path d="M11 11l3 3"/></svg>
+      <input class="search-input" id="search" placeholder="Search systems, categories, notes…" oninput="applyFilters()">
+    </div>
+    <div class="filter-group" id="cat-filters"></div>
+    <div class="filter-group" id="site-filters">
+      <button class="site-chip" data-site="COL" onclick="toggleSite('COL',this)">🟢 COL</button>
+      <button class="site-chip" data-site="PER" onclick="toggleSite('PER',this)">🔵 PER</button>
+      <button class="site-chip" data-site="KS" onclick="toggleSite('KS',this)">🟨 KS</button>
+    </div>
+    <select id="prio-filter" onchange="applyFilters()" style="padding:6px 10px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;background:var(--bg);color:var(--text);cursor:pointer;outline:none;">
+      <option value="">All priorities</option>
+      <option value="High">High</option>
+      <option value="Medium">Medium</option>
+      <option value="Low">Low</option>
+    </select>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th onclick="sort('system')" id="th-system">System / Tool <span class="sort-icon">↕</span></th>
+          <th onclick="sort('category')" id="th-category">Category <span class="sort-icon">↕</span></th>
+          <th onclick="sort('level')" id="th-level">Access level <span class="sort-icon">↕</span></th>
+          <th onclick="sort('priority')" id="th-priority">Priority <span class="sort-icon">↕</span></th>
+          <th>COL</th>
+          <th>PER</th>
+          <th>KS</th>
+          <th>Status</th>
+          <th>Requestor</th>
+          <th>Type of Entry</th>
+          <th>Notes</th>
+          <th style="width:70px"></th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+    <div class="empty" id="empty-state" style="display:none">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35M11 8v6M8 11h6"/></svg>
+      <p>No entries match your filters.</p>
+    </div>
+  </div>
+
+  <div class="export-bar">
+    <span style="margin-left:auto;font-size:12px;color:var(--text-3)" id="last-updated"></span>
+  </div>
+</main>
+
+<div class="modal-bg" id="modal-bg" onclick="closeModal(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="modal-title">Add access</h2>
+      <button class="icon-btn" onclick="closeModal(null)">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 4l8 8M12 4l-8 8"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="field-row">
+        <div class="field">
+          <label>System / Tool *</label>
+          <input id="f-system" placeholder="e.g. BrightPattern ACD">
+        </div>
+        <div class="field">
+          <label>Category *</label>
+          <select id="f-category">
+            <option value="Call Center Platform">Call Center Platform</option>
+            <option value="Infrastructure">Infrastructure</option>
+            <option value="Security">Security</option>
+            <option value="Corporate">Corporate</option>
+            <option value="Telephony">Telephony</option>
+          </select>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Access level *</label>
+          <select id="f-level">
+            <option value="Admin">Admin</option>
+            <option value="Read + Export">Read + Export</option>
+            <option value="Read-only">Read-only</option>
+            <option value="Owner">Owner</option>
+            <option value="Helpdesk Admin">Helpdesk Admin</option>
+            <option value="Supervisor/QA">Supervisor/QA</option>
+            <option value="Delegated Admin">Delegated Admin</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Priority</label>
+          <select id="f-priority">
+            <option value="High">High</option>
+            <option value="Medium">Medium</option>
+            <option value="Low">Low</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label>Status</label>
+        <select id="f-status">
+          <option value="Pending">Pending</option>
+          <option value="Requested">Requested</option>
+          <option value="Granted">Granted</option>
+          <option value="Revoked">Revoked</option>
+        </select>
+      </div>
+      <div class="toggle-row">
+        <span class="toggle-label">🟢 Colombia (COL)</span>
+        <button class="toggle on" id="t-col" onclick="this.classList.toggle('on')"></button>
+      </div>
+      <div class="toggle-row">
+        <span class="toggle-label">🔵 Peru (PER)</span>
+        <button class="toggle on" id="t-per" onclick="this.classList.toggle('on')"></button>
+      </div>
+      <div class="toggle-row">
+        <span class="toggle-label">🟨 Kansas (KS)</span>
+        <button class="toggle on" id="t-ks" onclick="this.classList.toggle('on')"></button>
+      </div>
+      <div class="field">
+        <label>Type of Entry</label>
+        <select id="f-typeOfEntry">
+          <option value="">— Not set —</option>
+          <option value="Access Request">Access Request</option>
+          <option value="Platform Knowledge">Platform Knowledge</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Notes</label>
+        <textarea id="f-notes" placeholder="Scope, responsible person, ticket number…"></textarea>
+      </div>
+      <div class="field">
+        <label>Requestor (select all that apply)</label>
+        <div class="check-group" id="f-requestors">
+          <label class="check-pill"><input type="checkbox" value="Sebastian"><span class="dot" style="background:#7C3AED"></span>Sebastian</label>
+          <label class="check-pill"><input type="checkbox" value="Dean"><span class="dot" style="background:#059669"></span>Dean</label>
+          <label class="check-pill"><input type="checkbox" value="Lucas"><span class="dot" style="background:#D97706"></span>Lucas</label>
+          <label class="check-pill"><input type="checkbox" value="Reggie"><span class="dot" style="background:#DC2626"></span>Reggie</label>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal(null)">Cancel</button>
+      <button class="btn btn-primary" onclick="saveEntry()">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── CONFIGURACIÓN DEL WEBHOOK GOOGLE SHEETS ──────────────────────────────
+const GOOGLE_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbyQWWWK6ElII3MyTmtC5YWBaHAOnMTh9GnoRdRy1mvjwV3JowE8aTZQcrU0Pv21dw4_/exec";
+
+// ── DATOS INICIALES ────────────────────────────────────────────────────────
+let data = [];
+let nextId = 1;
+let sortKey = null;
+let sortDir = 1;
+let siteFilter = { COL: false, PER: false, KS: false };
+let editingId = null;
+
+const cats = {
+  "Call Center Platform": { cls:"b-plat", short:"CC Platform" },
+  "Infrastructure":       { cls:"b-infra", short:"Infra" },
+  "Security":             { cls:"b-sec",   short:"Security" },
+  "Corporate":            { cls:"b-corp",  short:"Corporate" },
+  "Telephony":            { cls:"b-tel",   short:"Telephony" },
+};
+const levels = {
+  "Admin":           "lv-admin",
+  "Read + Export":   "lv-readex",
+  "Read-only":       "lv-read",
+  "Owner":           "lv-owner",
+  "Helpdesk Admin":  "lv-help",
+  "Supervisor/QA":   "lv-admin",
+  "Delegated Admin": "lv-help",
+};
+const prioColor = { High:"prio-high", Medium:"prio-med", Low:"prio-low" };
+
+// ── CONEXIÓN WEBHOOK CON GOOGLE SHEETS ─────────────────────────────────────
+async function loadFromGoogleSheet() {
+  if (!GOOGLE_WEBHOOK_URL || GOOGLE_WEBHOOK_URL.includes("REPLACEMENT")) return;
+  showToast("Loading data from Google Sheets...");
+  try {
+    // Usamos redirect: 'follow' para gestionar la redirección 302 de Google Apps Script
+    const res = await fetch(GOOGLE_WEBHOOK_URL, {
+      method: 'GET',
+      redirect: 'follow'
+    });
+    if (res.ok) {
+      data = await res.json();
+      nextId = data.length ? Math.max(...data.map(d => d.id || 0)) + 1 : 1;
+      applyFilters();
+      showToast("Data synced from Google Sheets");
+    } else {
+      showToast("Error connecting to Google Sheets");
+    }
+  } catch (err) {
+    console.error("Error loading from Webhook:", err);
+    showToast("Error connecting to Google Sheets");
+  }
+}
+async function syncToGoogleSheet() {
+  if (!GOOGLE_WEBHOOK_URL || GOOGLE_WEBHOOK_URL.includes("REEMPLAZAR")) return;
+  try {
+    await fetch(GOOGLE_WEBHOOK_URL, {
+      method: "POST",
+      mode: "no-cors",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data)
+    });
+    showToast("Guardado en Google Sheets");
+  } catch (err) {
+    console.error("Error al guardar en Webhook:", err);
+  }
+}
+
+// ── RENDER ─────────────────────────────────────────────────────────────────
+function renderStats() {
+  const total    = data.length;
+  const granted  = data.filter(d=>d.status==="Granted").length;
+  const highPrio = data.filter(d=>d.priority==="High").length;
+  const colCount = data.filter(d=>d.col).length;
+  const perCount = data.filter(d=>d.per).length;
+  const ksCount  = data.filter(d=>d.ks).length;
+  document.getElementById("stats-bar").innerHTML = `
+    <div class="stat-card"><div class="stat-value">${total}</div><div class="stat-label">Total systems</div></div>
+    <div class="stat-card"><div class="stat-value" style="color:var(--col)">${colCount}</div><div class="stat-label">COL scope</div></div>
+    <div class="stat-card"><div class="stat-value" style="color:var(--per)">${perCount}</div><div class="stat-label">PER scope</div></div>
+    <div class="stat-card"><div class="stat-value" style="color:var(--ks)">${ksCount}</div><div class="stat-label">KS scope</div></div>
+    <div class="stat-card"><div class="stat-value" style="color:var(--danger)">${highPrio}</div><div class="stat-label">High priority</div></div>
+    <div class="stat-card"><div class="stat-value" style="color:var(--success)">${granted}</div><div class="stat-label">Granted</div></div>
+  `;
+}
+
+function renderCatFilters() {
+  const wrap = document.getElementById("cat-filters");
+  wrap.innerHTML = '<button class="filter-chip on" data-cat="all" onclick="toggleCat(this)">All</button>' +
+    Object.keys(cats).map(c=>`<button class="filter-chip" data-cat="${c}" onclick="toggleCat(this)">${cats[c].short}</button>`).join('');
+}
+
+function toggleCat(btn) {
+  document.querySelectorAll(".filter-chip").forEach(b=>b.classList.remove("on"));
+  btn.classList.add("on");
+  applyFilters();
+}
+
+function toggleSite(site, btn) {
+  siteFilter[site] = !siteFilter[site];
+  btn.classList.toggle(site.toLowerCase() + "-on", siteFilter[site]);
+  applyFilters();
+}
+
+function applyFilters() {
+  const q    = document.getElementById("search").value.toLowerCase();
+  const cat  = document.querySelector(".filter-chip.on")?.dataset.cat || "all";
+  const prio = document.getElementById("prio-filter").value;
+  const filtered = data.filter(d => {
+    const matchQ    = !q || [d.system, d.category, d.level, d.notes, d.status, d.typeOfEntry].some(f=>(f||'').toLowerCase().includes(q));
+    const matchCat  = cat==="all" || d.category===cat;
+    const matchPrio = !prio || d.priority===prio;
+    const matchSite = (!siteFilter.COL && !siteFilter.PER && !siteFilter.KS) ||
+                      (siteFilter.COL && d.col) || (siteFilter.PER && d.per) || (siteFilter.KS && d.ks);
+    return matchQ && matchCat && matchPrio && matchSite;
+  });
+  renderTable(filtered);
+}
+
+function sort(key) {
+  if (sortKey===key) sortDir *= -1; else { sortKey=key; sortDir=1; }
+  document.querySelectorAll("th").forEach(t=>t.classList.remove("sorted"));
+  const th = document.getElementById("th-"+key);
+  if (th) { th.classList.add("sorted"); th.querySelector(".sort-icon").textContent = sortDir===1?"↑":"↓"; }
+  applyFilters();
+}
+
+function getSorted(arr) {
+  if (!sortKey) return arr;
+  return [...arr].sort((a,b)=>{
+    const av = a[sortKey]?.toString().toLowerCase()||"";
+    const bv = b[sortKey]?.toString().toLowerCase()||"";
+    return av<bv ? -sortDir : av>bv ? sortDir : 0;
+  });
+}
+
+function renderTable(filtered) {
+  const sorted = getSorted(filtered);
+  const tbody  = document.getElementById("tbody");
+  const empty  = document.getElementById("empty-state");
+  if (!sorted.length) { tbody.innerHTML=""; empty.style.display="block"; return; }
+  empty.style.display="none";
+  const sc = (s) => {
+    const m = { Granted:"var(--success)", Requested:"var(--warning)", Pending:"var(--text-3)", Revoked:"var(--danger)" };
+    return m[s]||"var(--text-3)";
+  };
+  const reqColor = { Sebastian:"on-seb", Dean:"on-dean", Lucas:"on-luc", Reggie:"on-reg" };
+
+  const reqPills = (d) => (d.requestors||[]).length
+    ? (d.requestors).map(r=>`<span class="pill ${reqColor[r]||''}">${r}</span>`).join('')
+    : `<span style="color:var(--text-3);font-size:12px">—</span>`;
+
+  tbody.innerHTML = sorted.map(d=>`
+    <tr class="data-row" id="row-${d.id}">
+      <td><span class="editable" onclick="startEdit(${d.id},'system',this)">${d.system}</span></td>
+      <td><span class="badge ${cats[d.category]?.cls||''}">${d.category}</span></td>
+      <td><span class="level ${levels[d.level]||''}">${d.level}</span></td>
+      <td><span class="prio ${prioColor[d.priority]||''}"></span> ${d.priority}</td>
+      <td><span class="site-check ${d.col?'site-yes-col':'site-no'}" onclick="toggleField(${d.id},'col')" title="Toggle COL">${d.col?'✓':'–'}</span></td>
+      <td><span class="site-check ${d.per?'site-yes-per':'site-no'}" onclick="toggleField(${d.id},'per')" title="Toggle PER">${d.per?'✓':'–'}</span></td>
+      <td><span class="site-check ${d.ks?'site-yes-ks':'site-no'}" onclick="toggleField(${d.id},'ks')" title="Toggle KS">${d.ks?'✓':'–'}</span></td>
+      <td>
+        <select onchange="changeStatus(${d.id},this.value)" style="border:1px solid var(--border);border-radius:4px;padding:3px 6px;font-size:12px;color:${sc(d.status)};background:var(--bg);cursor:pointer;outline:none;">
+          ${["Pending","Requested","Granted","Revoked"].map(s=>`<option value="${s}" ${d.status===s?"selected":""}>${s}</option>`).join('')}
+        </select>
+      </td>
+      <td>
+        <div class="pill-group" onclick="editEntry(${d.id})" style="cursor:pointer;min-width:80px">${reqPills(d)}</div>
+      </td>
+      <td>
+        <select onchange="changeField(${d.id},'typeOfEntry',this.value)" style="border:1px solid var(--border);border-radius:4px;padding:3px 6px;font-size:12px;background:var(--bg);color:var(--text-2);cursor:pointer;outline:none;max-width:140px;">
+          <option value="">— Not set —</option>
+          ${["Access Request","Platform Knowledge"].map(s=>`<option value="${s}" ${d.typeOfEntry===s?"selected":""}>${s}</option>`).join('')}
+        </select>
+      </td>
+      <td style="max-width:180px;color:var(--text-2)"><span class="editable" onclick="startEdit(${d.id},'notes',this)">${d.notes||'—'}</span></td>
+      <td>
+        <div class="row-actions">
+          <button class="icon-btn" title="Edit" onclick="editEntry(${d.id})">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M11.5 2.5a1.414 1.414 0 0 1 2 2L5 13H3v-2L11.5 2.5z"/></svg>
+          </button>
+          <button class="icon-btn del" title="Delete" onclick="deleteEntry(${d.id})">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 4h10M6 4V3h4v1M5 4l.5 9h5L11 4"/></svg>
+          </button>
+        </div>
+      </td>
+    </tr>`).join('');
+  renderStats();
+  document.getElementById("last-updated").textContent = "Last updated: " + new Date().toLocaleString("en-US",{month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"});
+}
+
+// ── INLINE EDIT & ACTIONS ──────────────────────────────────────────────────
+function startEdit(id, field, el) {
+  const d = data.find(r=>r.id===id);
+  if (!d) return;
+  const val = d[field];
+  const inp = document.createElement("input");
+  inp.className = "edit-input";
+  inp.value = val;
+  inp.style.minWidth = "120px";
+  el.replaceWith(inp);
+  inp.focus();
+  inp.select();
+  const commit = () => {
+    d[field] = inp.value.trim() || val;
+    applyFilters();
+    syncToGoogleSheet();
+  };
+  inp.addEventListener("blur", commit);
+  inp.addEventListener("keydown", e => { if (e.key==="Enter") inp.blur(); if (e.key==="Escape"){ d[field]=val; applyFilters(); } });
+}
+
+function toggleField(id, field) {
+  const d = data.find(r=>r.id===id);
+  if (d) { d[field]=!d[field]; applyFilters(); syncToGoogleSheet(); }
+}
+
+function changeStatus(id, val) {
+  const d = data.find(r=>r.id===id);
+  if (d) { d.status=val; applyFilters(); syncToGoogleSheet(); }
+}
+
+function changeField(id, field, val) {
+  const d = data.find(r=>r.id===id);
+  if (d) { d[field]=val; syncToGoogleSheet(); }
+}
+
+// ── MODAL ──────────────────────────────────────────────────────────────────
+function openModal(d=null) {
+  editingId = d ? d.id : null;
+  document.getElementById("modal-title").textContent = d ? "Edit access" : "Add access";
+  document.getElementById("f-system").value          = d?.system          || "";
+  document.getElementById("f-category").value        = d?.category        || "Call Center Platform";
+  document.getElementById("f-level").value           = d?.level           || "Admin";
+  document.getElementById("f-priority").value        = d?.priority        || "High";
+  document.getElementById("f-status").value          = d?.status          || "Pending";
+  document.getElementById("f-notes").value           = d?.notes           || "";
+  document.getElementById("f-typeOfEntry").value     = d?.typeOfEntry     || "";
+  
+  document.getElementById("t-col").classList.toggle("on", d ? d.col : true);
+  document.getElementById("t-per").classList.toggle("on", d ? d.per : true);
+  document.getElementById("t-ks").classList.toggle("on", d ? d.ks : true);
+
+  // Configuración de los solicitantes (Multi-select pills)
+  const current = d?.requestors || [];
+  document.querySelectorAll("#f-requestors .check-pill").forEach(pill => {
+    const val = pill.querySelector("input").value;
+    const isSelected = current.includes(val);
+    pill.classList.toggle("sel", isSelected);
+    pill.querySelector("input").checked = isSelected;
+  });
+
+  document.getElementById("modal-bg").classList.add("open");
+  document.getElementById("f-system").focus();
+}
+
+// Evento para activar / desactivar la selección múltiple de Requestor
+document.getElementById("f-requestors").addEventListener("click", e => {
+  const pill = e.target.closest(".check-pill");
+  if (pill) {
+    const input = pill.querySelector("input");
+    input.checked = !input.checked;
+    pill.classList.toggle("sel", input.checked);
+  }
+});
+
+function editEntry(id) {
+  openModal(data.find(d=>d.id===id));
+}
+
+function closeModal(e) {
+  if (e && e.target!==document.getElementById("modal-bg")) return;
+  document.getElementById("modal-bg").classList.remove("open");
+  editingId = null;
+}
+
+function saveEntry() {
+  const sys = document.getElementById("f-system").value.trim();
+  if (!sys) { document.getElementById("f-system").focus(); return; }
+  
+  const requestors = [];
+  document.querySelectorAll("#f-requestors .check-pill").forEach(pill => {
+    if (pill.querySelector("input").checked) {
+      requestors.push(pill.querySelector("input").value);
+    }
+  });
+
+  const entry = {
+    id:          editingId || nextId++,
+    system:      sys,
+    category:    document.getElementById("f-category").value,
+    level:       document.getElementById("f-level").value,
+    priority:    document.getElementById("f-priority").value,
+    status:      document.getElementById("f-status").value,
+    col:         document.getElementById("t-col").classList.contains("on"),
+    per:         document.getElementById("t-per").classList.contains("on"),
+    ks:          document.getElementById("t-ks").classList.contains("on"),
+    typeOfEntry: document.getElementById("f-typeOfEntry").value,
+    notes:       document.getElementById("f-notes").value.trim(),
+    requestors:  requestors
+  };
+
+  if (editingId) {
+    const idx = data.findIndex(d=>d.id===editingId);
+    if (idx>-1) data[idx] = entry;
+  } else {
+    data.push(entry);
+  }
+
+  closeModal(null);
+  applyFilters();
+  syncToGoogleSheet();
+}
+
+function deleteEntry(id) {
+  if (confirm("Remove system from registry?")) {
+    data = data.filter(d=>d.id!==id);
+    applyFilters();
+    syncToGoogleSheet();
+  }
+}
+
+// ── TOAST ──────────────────────────────────────────────────────────────────
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>t.classList.remove("show"), 2200);
+}
+
+// ── INIT ───────────────────────────────────────────────────────────────────
+renderCatFilters();
+loadFromGoogleSheet();
+
+document.getElementById("modal-bg").addEventListener("keydown", e=>{
+  if (e.key==="Escape") closeModal(null);
+  if (e.key==="Enter" && e.target.tagName!=="TEXTAREA") saveEntry();
+});
+</script>
+</body>
+</html>
