@@ -382,7 +382,7 @@
           <option value="Pending">Pending</option>
           <option value="Requested">Requested</option>
           <option value="Granted">Granted</option>
-          <option value="Revoked">Revoked</option>
+          <option value="Rejected">Rejected</option>
         </select>
       </div>
       <div class="toggle-row">
@@ -571,7 +571,7 @@ function renderTable(filtered) {
   if (!sorted.length) { tbody.innerHTML=""; empty.style.display="block"; return; }
   empty.style.display="none";
   const sc = (s) => {
-    const m = { Granted:"var(--success)", Requested:"var(--warning)", Pending:"var(--text-3)", Revoked:"var(--danger)" };
+    const m = { Granted:"var(--success)", Requested:"var(--warning)", Pending:"var(--text-3)", Rejected:"var(--danger)" };
     return m[s]||"var(--text-3)";
   };
   const reqColor = { Sebastian:"on-seb", Dean:"on-dean", Lucas:"on-luc", Reggie:"on-reg" };
@@ -591,7 +591,7 @@ function renderTable(filtered) {
       <td><span class="site-check ${d.ks?'site-yes-ks':'site-no'}" onclick="toggleField(${d.id},'ks')" title="Toggle KS">${d.ks?'✓':'–'}</span></td>
       <td>
         <select onchange="changeStatus(${d.id},this.value)" style="border:1px solid var(--border);border-radius:4px;padding:3px 6px;font-size:12px;color:${sc(d.status)};background:var(--bg);cursor:pointer;outline:none;">
-          ${["Pending","Requested","Granted","Revoked"].map(s=>`<option value="${s}" ${d.status===s?"selected":""}>${s}</option>`).join('')}
+          ${["Pending","Requested","Granted","Rejected"].map(s=>`<option value="${s}" ${d.status===s?"selected":""}>${s}</option>`).join('')}
         </select>
       </td>
       <td>
